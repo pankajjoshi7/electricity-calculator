@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>B772 बिजली बिल कैलकुलेटर</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      padding: 15px;
+    }
+
+    .banner {
+      background: #2c3e50;
+      color: white;
+      text-align: center;
+      padding: 12px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    label {
+      font-size: 14px;
+      margin-top: 10px;
+      display: block;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      background: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .result {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="banner">B772 बिजली बिल कैलकुलेटर</div>
+
+<div class="container">
+
+  <div class="card">
+    <h3>बेसिक जानकारी</h3>
+
+    <label>फिक्स्ड मीटर चार्ज</label>
+    <input type="number" id="fixed_charge">
+
+    <label>कुल बिजली बिल (UPCL)</label>
+    <input type="number" id="final_bill">
+
+    <label>मुख्य मीटर यूनिट</label>
+    <input type="number" id="main_units">
+  </div>
+
+  <div class="card">
+    <h3>पानी मीटर</h3>
+
+    <label>वर्तमान पानी रीडिंग</label>
+    <input type="number" id="water_current">
+
+    <label>पिछली पानी रीडिंग</label>
+    <input type="number" id="water_previous">
+  </div>
+
+  <div class="card">
+    <h3>ग्राउंड फ्लोर (Tenant 0)</h3>
+
+    <label>वर्तमान मीटर</label>
+    <input type="number" id="t0_current">
+
+    <label>पिछला मीटर</label>
+    <input type="number" id="t0_previous">
+  </div>
+
+  <div class="card">
+    <h3>फर्स्ट फ्लोर (Tenant 1)</h3>
+
+    <label>वर्तमान मीटर</label>
+    <input type="number" id="t1_current">
+
+    <label>पिछला मीटर</label>
+    <input type="number" id="t1_previous">
+  </div>
+
+  <button onclick="calculateBill()">बिल निकालें</button>
+
+  <div class="card result" id="result"></div>
+
+</div>
+
+<script>
+
+function calculateBill() {
+
+  let fixed_meter_charge = Number(document.getElementById("fixed_charge").value);
+  let finalBill = Number(document.getElementById("final_bill").value);
+  let mainUnits = Number(document.getElementById("main_units").value);
+
+  let waterCurrent = Number(document.getElementById("water_current").value);
+  let waterPrevious = Number(document.getElementById("water_previous").value);
+
+  let t0c = Number(document.getElementById("t0_current").value);
+  let t0p = Number(document.getElementById("t0_previous").value);
+
+  let t1c = Number(document.getElementById("t1_current").value);
+  let t1p = Number(document.getElementById("t1_previous").value);
+
+  // Step 1
+  let billWithoutFixedCharge = finalBill - fixed_meter_charge;
+
+  // Step 2
+  let waterUnits = waterCurrent - waterPrevious;
+  let waterPerTenant = waterUnits / 2;
+
+  // Step 3
+  let t0Units = (t0c - t0p) + waterPerTenant;
+  let t1Units = (t1c - t1p) - waterPerTenant;
+
+  // Step 4 Stabilizer
+  let stabilizer = mainUnits - (t0Units + t1Units);
+  let stabilizerShare = stabilizer / 2;
+
+  // Step 5 Final Units
+  let t0FinalUnits = t0Units + stabilizerShare;
+  let t1FinalUnits = t1Units + stabilizerShare;
+
+  // Step 6 Unit Price
+  let unitPrice = billWithoutFixedCharge / (t0FinalUnits + t1FinalUnits);
+
+  // Step 7 Final Bill
+  let t0Bill = (unitPrice * t0FinalUnits) + (fixed_meter_charge / 2);
+  let t1Bill = (unitPrice * t1FinalUnits) + (fixed_meter_charge / 2);
+
+  document.getElementById("result").innerHTML =
+    `ग्राउंड फ्लोर बिल: ₹ ${t0Bill.toFixed(2)} <br><br>
+     फर्स्ट फ्लोर बिल: ₹ ${t1Bill.toFixed(2)}`;
+
+}
+
+</script>
+
+</body>
+</html>
